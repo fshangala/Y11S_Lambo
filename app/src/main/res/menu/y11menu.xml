@@ -3,6 +3,16 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/reconnectBtn"
+        android:icon="@android:drawable/ic_popup_sync"
+        android:title="@string/reconnectBtn"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/stopBtn"
+        android:icon="@android:drawable/ic_delete"
+        android:title="@string/stopBtn"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/preferencesBtn"
         android:icon="@android:drawable/ic_menu_manage"
         android:title="@string/preferencesBtn"
