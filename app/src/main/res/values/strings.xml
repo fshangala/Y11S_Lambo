@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Y11S Lambo</string>
+    <string name="preferencesBtn">Preferences</string>
+    <string name="inputHostIpLabel">Host IP</string>
+    <string name="inputHostPortLabel">Host Port</string>
+    <string name="inputCodeLabel">Code</string>
+    <string name="saveBtn">Save</string>
 </resources>
