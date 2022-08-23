@@ -8,9 +8,9 @@
         android:title="@string/reconnectBtn"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/stopBtn"
-        android:icon="@android:drawable/ic_delete"
-        android:title="@string/stopBtn"
+        android:id="@+id/reloadBrowserBtn"
+        android:icon="@android:drawable/ic_popup_sync"
+        android:title="@string/reloadBrowserBtn"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/preferencesBtn"

@@ -4,20 +4,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
-import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Button
-import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.view.menu.MenuView
 import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : AppCompatActivity() {
@@ -31,7 +26,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         webView = findViewById(R.id.webView)
-        true.also { webView!!.settings.javaScriptEnabled = it }
+        true.also {
+            webView!!.settings.javaScriptEnabled = it
+            webView!!.settings.domStorageEnabled = it
+        }
         model = ViewModelProvider(this)[SlaveViewModel::class.java]
         sharedPref = getSharedPreferences("MySettings", Context.MODE_PRIVATE)
         slaveStatus = findViewById(R.id.slaveStatus)
@@ -42,34 +40,70 @@ class MainActivity : AppCompatActivity() {
             toast = Toast.makeText(this,it,Toast.LENGTH_SHORT)
             toast!!.show()
         }
+        model!!.automationEvents.observe(this) {
+            if (it.eventName == "place_bet") {
+                placeBet(it)
+            }
+            toast = Toast.makeText(this,it.eventArgs.toString(),Toast.LENGTH_LONG)
+            toast!!.show()
+        }
+        model!!.browserLoading.observe(this){
+            if (it == true) {
+                runOnUiThread {
+                    slaveStatus!!.text = "Loading..."
+                }
+            } else {
+                runOnUiThread {
+                    slaveStatus!!.text = "Loaded!"
+                }
+            }
+        }
         model!!.createConnection(sharedPref!!)
     }
 
     private fun startBrowser(){
-        val url = "https://jack9.io/d/index.html#/"
+        val url = "https://betbhai.com/home"
         webView!!.loadUrl(url)
         webView!!.webViewClient = object : WebViewClient(){
+
             override fun onPageFinished(view: WebView?, url: String?) {
-                SystemClock.sleep(5000)
-                view!!.evaluateJavascript("document.querySelector(\"input[name='loginName']\").value='fishing'"){
-                    runOnUiThread{
-                        slaveStatus!!.text = it
-                    }
-                }
-                view.evaluateJavascript("document.querySelector(\"input[name='password']\").value='somebody'"){
-                    runOnUiThread{
-                        slaveStatus!!.text = it
-                    }
-                }
-                runOnUiThread{
-                    slaveStatus!!.text = "Loaded!"
-                }
+                model!!.browserLoading.value = false
+                //SystemClock.sleep(5000)
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                runOnUiThread{
-                    slaveStatus!!.text = "Loading..."
-                }
+                model!!.browserLoading.value = true
+            }
+        }
+    }
+
+    private fun placeBet(automationEvents: AutomationEvents) {
+        var Oteam = ""
+        var Obacklay = automationEvents.eventArgs[1]
+        var Oodds = automationEvents.eventArgs[2]
+        var Ostake = automationEvents.eventArgs[3]
+
+        if (automationEvents.eventArgs[0] == "team1"){
+            Oteam = "0"
+        } else if (automationEvents.eventArgs[0] == "team2"){
+            Oteam = "4"
+        }
+
+        webView!!.evaluateJavascript("document.querySelectorAll(\"$Obacklay-odd.exch-odd.button\")[$Oteam].click();"){
+            runOnUiThread{
+                slaveStatus!!.text = it
+            }
+        }
+
+        SystemClock.sleep(200)
+
+        webView!!.evaluateJavascript(
+            "document.querySelector(\".odds-ctn input\").value = $Oodds;"+
+                    "document.querySelector(\".stake-ctn input\").value = $Ostake;"+
+                    "document.querySelector(\".place-btn\").click();"
+        ) {
+            runOnUiThread{
+                slaveStatus!!.text = it
             }
         }
     }
@@ -93,11 +127,15 @@ class MainActivity : AppCompatActivity() {
             R.id.preferencesBtn -> {
                 openConfig()
             }
-            R.id.stopBtn -> {
-                model!!.disconnect()
+            R.id.reloadBrowserBtn -> {
+                webView!!.reload()
             }
             R.id.reconnectBtn -> {
-                model!!.createConnection(sharedPref!!)
+                if(model!!.connected.value == true) {
+                    model!!.disconnect()
+                } else {
+                    model!!.createConnection(sharedPref!!)
+                }
             }
         }
         return super.onOptionsItemSelected(item)
