@@ -41,11 +41,25 @@ class MainActivity : AppCompatActivity() {
             toast!!.show()
         }
         model!!.automationEvents.observe(this) {
-            if (it.eventName == "place_bet") {
-                placeBet(it)
+            when (it.eventName) {
+                "place_bet" -> {
+                    placeBet(it)
+                    toast = Toast.makeText(this,it.eventArgs.toString(),Toast.LENGTH_LONG)
+                    toast!!.show()
+                }
+                "open_bet" -> {
+                    onOpenBet(it)
+                    toast = Toast.makeText(this,it.eventArgs.toString(),Toast.LENGTH_LONG)
+                    toast!!.show()
+                }
+                "confirm_bet" -> {
+                    confirmBet()
+                }
+                else -> {
+                    toast = Toast.makeText(this,it.eventName,Toast.LENGTH_LONG)
+                    toast!!.show()
+                }
             }
-            toast = Toast.makeText(this,it.eventArgs.toString(),Toast.LENGTH_LONG)
-            toast!!.show()
         }
         model!!.browserLoading.observe(this){
             if (it == true) {
@@ -77,6 +91,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun onOpenBet(automationEvents: AutomationEvents) {
+        var Oteam = ""
+        var Obacklay = automationEvents.eventArgs[1]
+        var Oodds = automationEvents.eventArgs[2]
+        var Ostake = automationEvents.eventArgs[3]
+
+        if (automationEvents.eventArgs[0] == "team1"){
+            Oteam = "0"
+        } else if (automationEvents.eventArgs[0] == "team2"){
+            Oteam = "4"
+        }
+
+        webView!!.evaluateJavascript("document.querySelectorAll(\".$Obacklay-odd.exch-odd-button\")[$Oteam].click();"){
+            runOnUiThread{
+                slaveStatus!!.text = it
+            }
+        }
+    }
+
     private fun placeBet(automationEvents: AutomationEvents) {
         var Oteam = ""
         var Obacklay = automationEvents.eventArgs[1]
@@ -89,20 +122,26 @@ class MainActivity : AppCompatActivity() {
             Oteam = "4"
         }
 
-        webView!!.evaluateJavascript("document.querySelectorAll(\"$Obacklay-odd.exch-odd.button\")[$Oteam].click();"){
+        webView!!.evaluateJavascript(
+            "document.querySelector(\".odds-ctn input\").value = $Oodds;"
+        ) {
             runOnUiThread{
                 slaveStatus!!.text = it
             }
         }
 
-        SystemClock.sleep(200)
-
         webView!!.evaluateJavascript(
-            "document.querySelector(\".odds-ctn input\").value = $Oodds;"+
-                    "document.querySelector(\".stake-ctn input\").value = $Ostake;"+
-                    "document.querySelector(\".place-btn\").click();"
+            "document.querySelector(\".stake-ctn input\").value = $Ostake;"
         ) {
             runOnUiThread{
+                slaveStatus!!.text = it
+            }
+        }
+    }
+
+    private fun confirmBet() {
+        webView!!.evaluateJavascript("document.querySelector(\".place-btn\").click();") {
+            runOnUiThread {
                 slaveStatus!!.text = it
             }
         }
