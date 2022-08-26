@@ -122,17 +122,21 @@ class MainActivity : AppCompatActivity() {
             Oteam = "4"
         }
 
-        webView!!.evaluateJavascript(
-            "document.querySelector(\".odds-ctn input\").value = $Oodds;"
-        ) {
+        webView!!.evaluateJavascript("var input = document.querySelector(\".odds-ctn input\");\n" +
+                "var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, \"value\").set;\n" +
+                "nativeInputValueSetter.call(input, '$Oodds');\n" +
+                "var ev2 = new Event('input', { bubbles: true});\n" +
+                "input.dispatchEvent(ev2);"){
             runOnUiThread{
                 slaveStatus!!.text = it
             }
         }
 
-        webView!!.evaluateJavascript(
-            "document.querySelector(\".stake-ctn input\").value = $Ostake;"
-        ) {
+        webView!!.evaluateJavascript("var input = document.querySelector(\".stake-ctn input\");\n" +
+                "var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, \"value\").set;\n" +
+                "nativeInputValueSetter.call(input, '$Ostake');\n" +
+                "var ev1 = new Event('input', { bubbles: true});\n" +
+                "input.dispatchEvent(ev1);"){
             runOnUiThread{
                 slaveStatus!!.text = it
             }
